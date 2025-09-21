@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ka" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>IMEDCalc - სამედიცინო კალკულატორები</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'fira': ['Fira Sans', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --surface: #334155;
+            --muted: #94a3b8;
+            --text: #e2e8f0;
+            --brand: #22d3ee;
+            --brand-2: #818cf8;
+            --ok: #22c55e;
+            --warn: #f59e0b;
+            --err: #ef4444;
+            --ring: rgba(34, 211, 238, 0.35);
+            --shadow-3: 0 10px 30px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.35);
+            --radius-2xl: 1.25rem;
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="light"] {
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --surface: #f8fafc;
+            --muted: #64748b;
+            --text: #1f2937;
+            --brand: #06b6d4;
+            --brand-2: #4f46e5;
+            --ok: #059669;
+            --warn: #d97706;
+            --err: #dc2626;
+            --ring: rgba(6, 182, 212, 0.25);
+            --shadow-3: 0 10px 30px rgba(0,0,0,.1), 0 2px 8px rgba(0,0,0,.05);
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: var(--transition);
+            line-height: 1.6;
+            font-size: 16px;
+            overscroll-behavior: none;
+        }
+        [data-theme="dark"] body {
+            background: 
+                radial-gradient(80rem 40rem at 10% -10%, rgba(129,140,248,.08), transparent 60%),
+                radial-gradient(70rem 30rem at 110% 10%, rgba(34,211,238,.08), transparent 60%),
+                var(--bg);
+        }
+
+        .container { 
+            @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+        }
+        
+        header {
+            @apply bg-card rounded-3xl shadow-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between border border-surface transition-all duration-300;
+        }
+        
+        .brand { 
+            @apply flex items-center gap-4; 
+        }
+        .logo {
+            @apply w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-brand-2 shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300;
+        }
+        [data-theme="light"] .logo {
+            @apply shadow-md;
+        }
+        .logo img {
+            @apply w-10 h-10;
+        }
+        .brand h1 { 
+            @apply text-2xl font-black tracking-tight m-0; 
+        }
+        .brand p { 
+            @apply text-sm opacity-75 m-0; 
+        }
+        
+        .disclaimer { 
+            @apply text-muted text-sm mt-4 text-center; 
+        }
+        
+        .theme-toggle {
+            @apply bg-surface text-text border border-muted rounded-full px-4 py-2 flex items-center gap-2 font-medium cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md active:scale-95 touch-manipulation;
+        }
+        
+        .nav-menu {
+            @apply flex flex-wrap gap-3 justify-center mt-6 sm:mt-0;
+        }
+        .nav-btn {
+            @apply bg-gradient-to-r from-brand to-brand-2 text-card px-6 py-3 rounded-xl font-bold text-sm shadow-lg cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-95 touch-manipulation border-0;
+        }
+        
+        .auth-buttons {
+            @apply flex flex-wrap gap-2 items-center;
+        }
+        
+        .grid { 
+            @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8 hidden; 
+        }
+        .grid.active { 
+            @apply block; 
+            animation: fadeIn 0.5s ease; 
+        }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .card {
+            @apply bg-card border border-surface rounded-3xl p-6 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-pointer;
+        }
+        [data-theme="light"] .card {
+            @apply shadow-lg;
+        }
+
+        .card h2 { 
+            @apply text-xl font-black mb-4 flex items-center gap-2; 
+        }
+        .formula {
+            @apply font-fira text-sm text-brand py-3 px-4 mb-4 border-b-2 border-dashed border-surface rounded-lg bg-surface/50;
+        }
+        .muted { 
+            @apply text-muted text-sm; 
+        }
+        .row { 
+            @apply grid grid-cols-1 md:grid-cols-2 gap-4; 
+        }
+        
+        label { 
+            @apply block text-sm font-medium mb-2 text-text; 
+        }
+        input, select {
+            @apply w-full p-4 bg-surface text-text border border-muted rounded-xl outline-none transition-all duration-300 text-base min-h-[44px] placeholder:text-muted/70;
+        }
+        input:focus, select:focus { 
+            @apply border-brand ring-4 ring-ring; 
+        }
+        
+        .btns { 
+            @apply flex flex-wrap gap-3 mt-6; 
+        }
+        button {
+            @apply px-6 py-3 border-0 rounded-xl font-bold cursor-pointer transition-all duration-300 text-sm min-h-[44px] touch-manipulation shadow-lg;
+        }
+        .btn-primary {
+            @apply bg-gradient-to-r from-brand to-brand-2 text-card hover:from-brand-dark hover:to-brand-2-dark active:scale-95;
+        }
+        .btn-ghost {
+            @apply bg-surface text-text border border-muted hover:bg-surface/80 active:bg-surface/70;
+        }
+        
+        .result {
+            @apply mt-6 p-4 rounded-xl bg-surface border-2 border-dashed border-brand-2 font-bold tracking-wide text-sm transition-all duration-300;
+        }
+        
+        .note { 
+            @apply mt-6 pl-4 pr-4 py-3 border-l-4 rounded-lg text-sm; 
+        }
+        .note-success { 
+            @apply border-ok bg-ok/10; 
+        }
+        .note-warning { 
+            @apply border-warn bg-warn/10; 
+        }
+        .note-danger { 
+            @apply border-err bg-err/10; 
+        }
+        
+        .foot { 
+            @apply mt-12 text-center text-muted text-xs pt-8 border-t border-surface; 
+        }
+        
+        .tag, .chip {
+            @apply inline-block text-xs px-3 py-1 rounded-full font-medium ml-2 border;
+        }
+        .chip { 
+            @apply bg-brand/10 border-brand text-brand font-semibold; 
+        }
+        
+        .recommendations {
+            @apply mt-6 p-4 bg-surface rounded-xl border border-muted;
+        }
+        .recommendations table {
+            @apply w-full border-collapse;
+        }
+        .recommendations th, .recommendations td {
+            @apply p-3 border border-muted text-left text-sm;
+        }
+        .recommendations th {
+            @apply bg-brand-2 text-card font-bold;
+        }
+
+        /* Modal Styles */
+        .modal {
+            @apply fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4;
+        }
+        .modal-content {
+            @apply bg-card rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-surface;
+        }
+        .modal-header {
+            @apply text-xl font-black mb-6 flex items-center gap-2 pb-2 border-b border-surface;
+        }
+        .modal-close {
+            @apply absolute top-4 right-4 text-muted hover:text-text transition-colors p-1 rounded-full hover:bg-surface/50;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            body { font-size: 15px; }
+            .container { @apply px-4 py-4; }
+            header { @apply p-4 flex-col items-stretch gap-4; }
+            .logo { @apply w-10 h-10; }
+            .brand h1 { @apply text-xl; }
+            .nav-menu { @apply gap-2 mt-4 justify-center; }
+            .nav-btn { @apply px-4 py-2 text-sm; }
+            .grid { @apply gap-4 mt-6; }
+            .card { @apply p-4; }
+            .card h2 { @apply text-lg; }
+            .row { @apply grid-cols-1 gap-3; }
+            .btns { @apply gap-2 flex-col sm:flex-row; }
+            
+            .recommendations table { 
+                @apply block overflow-x-auto; 
+            }
+            .recommendations thead { @apply hidden; }
+            .recommendations tbody, .recommendations tr { @apply block; }
+            .recommendations td {
+                @apply block text-left p-3 relative pl-0 border-b border-muted;
+            }
+            .recommendations td:before {
+                content: attr(data-label);
+                @apply absolute left-3 w-1/3 font-bold text-brand;
+            }
+            .recommendations tr { 
+                @apply mb-3 border border-muted rounded-lg p-3; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <div class="logo">
+                    <img src="/logo.svg" alt="IMEDCalc Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDEwIEwxMCAzMEwxNSAxNUwyNSAyNUwzMCAzMEwzMCAxMEwxMCAxMFoiIGZpbGw9IiM3MDcwNzAiLz4KPC9zdmc+'">
+                </div>
+                <div>
+                    <h1>IMEDCalc</h1>
+                    <p>სამედიცინო კალკულატორები</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 items-end sm:items-center w-full sm:w-auto">
+                <div class="auth-buttons flex-1 sm:flex-none">
+                    <button id="loginBtn" class="nav-btn" onclick="showModal('loginModal')">შესვლა</button>
+                    <button id="registerBtn" class="nav-btn" onclick="showModal('registerModal')">რეგისტრაცია</button>
+                    <button id="profileBtn" class="nav-btn hidden" onclick="showModal('profileModal')">პროფილი</button>
+                    <button id="logoutBtn" class="nav-btn hidden" onclick="handleLogout()">გამოსვლა</button>
+                </div>
+                
+                <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="theme-icon">
+                        <path class="sun-hidden" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z"/>
+                        <path class="moon-hidden" d="m21.64 13a14 14 0 0 0-16.5-9.09A2 2 0 0 0 3 11.5a2 2 0 0 0 2 2h.5a2 2 0 0 0 2-2 2 2 0 0 0-2-2 2 2 0 0 0-.366.03 12 12 0 0 0 12.73 12.73A2 2 0 0 0 20.5 21a2 2 0 0 0 2-2 2 2 0 0 0-2-2h-.5a2 2 0 0 0-2 2 2 2 0 0 0 2 2 2 2 0 0 0 1.09-.58Z"/>
+                    </svg>
+                    <span id="themeText">ღია თემა</span>
+                </button>
+            </div>
+        </header>
+
+        <p class="disclaimer">⚠️ <strong>დამხმარე ხელსაწყო</strong> — სავალდებულოა შედეგების გადამოწმება კლინიკურ პროტოკოლებთან და პაციენტის მდგომარეობასთან.</p>
+
+        <!-- Navigation -->
+        <nav class="nav-menu">
+            <button class="nav-btn" onclick="showCalculator('bicarb-card')">🧪 სოდა ბუფერი</button>
+            <button class="nav-btn" onclick="showCalculator('potassium-card')">⚡ კალიუმის გადასხმა</button>
+            <button class="nav-btn" onclick="showCalculator('kcoef-card')">📊 K კოეფიციენტი</button>
+            <button class="nav-btn" onclick="showCalculator('solu-card')">💉 სოლუმედროლი</button>
+            <button class="nav-btn" onclick="showCalculator('crcl-card')">🩸 CrCl კალკულატორი</button>
+        </nav>
+
+        <!-- Calculator Grid -->
+        <div class="grid" id="calculatorGrid">
+            <!-- Bicarbonate Calculator -->
+            <section class="card" id="bicarb-card">
+                <h2>🧪 სოდა ბუფერი — გადასხმის გამოთვლა <span class="tag">ფორმულა</span></h2>
+                <div class="formula">წონა × |BE(act)| × 2 × 0.3 = მლ</div>
+                <p class="muted">შეიყვანეთ პაციენტის მონაცემები დოზის გამოსათვლელად.</p>
+                
+                <div class="row">
+                    <div>
+                        <label for="bicarb-weight">პაციენტის წონა (კგ)</label>
+                        <input id="bicarb-weight" type="number" min="0" step="0.1" placeholder="მაგ. 70" />
+                    </div>
+                    <div>
+                        <label for="bicarb-be">BE (აბსოლუტური მნიშვნელობა)</label>
+                        <input id="bicarb-be" type="number" step="0.1" placeholder="მაგ. 8" />
+                    </div>
+                </div>
+                
+                <div class="btns">
+                    <button class="btn-primary" onclick="calcBicarb()">🧮 გამოთვლა</button>
+                    <button class="btn-ghost" onclick="resetCard('bicarb-card')">🔄 გასუფთავება</button>
+                    <button class="btn-ghost" onclick="copyResult('bicarb-result')">📋 კოპირება</button>
+                </div>
+                
+                <div id="bicarb-result" class="result" aria-live="polite">შედეგი: —</div>
+                <div class="note note-warning">
+                    📝 შენიშვნა: შეადარეთ შედეგი თქვენს ხსნარის კონცენტრაციასთან (ჩვეულებრივ 8.4%).
+                </div>
+            </section>
+
+            <!-- Potassium Calculator -->
+            <section class="card" id="potassium-card">
+                <h2>⚡ კალიუმის გადასხმა <span class="chip">ნელა გადასხმა</span></h2>
+                <div class="formula">(წონა × 1.74) ÷ კალიუმის მაჩვენებელი = მლ</div>
+                <p class="muted">გამოთვლის საჭირო KCl-ის ოდენობა მითითებული დონის მისაღწევად.</p>
+                
+                <div class="row">
+                    <div>
+                        <label for="k-weight">პაციენტის წონა (კგ)</label>
+                        <input id="k-weight" type="number" min="0" step="0.1" placeholder="მაგ. 70" />
+                    </div>
+                    <div>
+                        <label for="k-level">კალიუმის მაჩვენებელი (mmol/L)</label>
+                        <input id="k-level" type="number" min="0.1" step="0.1" placeholder="მაგ. 3.0" />
+                    </div>
+                </div>
+                
+                <div class="btns">
+                    <button class="btn-primary" onclick="calcPotassium()">🧮 გამოთვლა</button>
+                    <button class="btn-ghost" onclick="resetCard('potassium-card')">🔄 გასუფთავება</button>
+                    <button class="btn-ghost" onclick="copyResult('potassium-result')">📋 კოპირება</button>
+                </div>
+                
+                <div id="potassium-result" class="result" aria-live="polite">შედეგი: —</div>
+                <div class="note note-success">
+                    ✅ <strong>მნიშვნელოვანი:</strong> კალიუმი <strong>მხოლოდ ნელა</strong> უნდა გადაისხას (10-20 mmol/სთ) მონიტორინგით!
+                </div>
+            </section>
+
+            <!-- K Coefficient Calculator -->
+            <section class="card" id="kcoef-card">
+                <h2>📊 K კოეფიციენტი</h2>
+                <div class="formula">მედიკამენტის მგ × 1000 ÷ ხსნარის მლ = მკგ/მლ</div>
+                <p class="muted">გამოთვლის მედიკამენტის კონცენტრაციას ხსნარში.</p>
+                
+                <div class="row">
+                    <div>
+                        <label for="kcoef-mg">მედიკამენტის რაოდენობა (mg)</label>
+                        <input id="kcoef-mg" type="number" min="0" step="0.1" placeholder="მაგ. 500" />
+                    </div>
+                    <div>
+                        <label for="kcoef-vol">ხსნარის რაოდენობა (მლ)</label>
+                        <input id="kcoef-vol" type="number" min="0.1" step="0.1" placeholder="მაგ. 100" />
+                    </div>
+                </div>
+                
+                <div class="btns">
+                    <button class="btn-primary" onclick="calcKcoef()">🧮 გამოთვლა</button>
+                    <button class="btn-ghost" onclick="resetCard('kcoef-card')">🔄 გასუფთავება</button>
+                    <button class="btn-ghost" onclick="copyResult('kcoef-result')">📋 კოპირება</button>
+                </div>
+                
+                <div id="kcoef-result" class="result" aria-live="polite">შედეგი: —</div>
+                <div class="note">
+                    💡 შედეგი გამოხატულია მიკროგრამებში მილილიტრზე (მკგ/მლ).
+                </div>
+            </section>
+
+            <!-- Solumedrol Calculator -->
+            <section class="card" id="solu-card">
+                <h2>💉 სოლუმედროლი — დამრტყმელი დოზა</h2>
+                <div class="formula">30 mg/kg — IV გადასხმა 15 წუთში</div>
+                <p class="muted">სტანდარტული დამრტყმელი დოზა ასთმის ექსაბერციაციისთვის.</p>
+                
+                <div class="row">
+                    <div class="md:col-span-2">
+                        <label for="solu-weight">პაციენტის წონა (კგ)</label>
+                        <input id="solu-weight" type="number" min="0" step="0.1" placeholder="მაგ. 70" />
+                    </div>
+                </div>
+                
+                <div class="btns">
+                    <button class="btn-primary" onclick="calcSolu()">🧮 გამოთვლა</button>
+                    <button class="btn-ghost" onclick="resetCard('solu-card')">🔄 გასუფთავება</button>
+                    <button class="btn-ghost" onclick="copyResult('solu-result')">📋 კოპირება</button>
+                </div>
+                
+                <div id="solu-result" class="result" aria-live="polite">შედეგი: —</div>
+                <div class="note note-success">
+                    💉 <strong>რეკომენდაცია:</strong> გამოიყენეთ პამპი 200 მლ/სთ-ზე. გადასხმა უნდა გაგრძელდეს 15 წუთის განმავლობაში.
+                </div>
+            </section>
+
+            <!-- CrCl Calculator -->
+            <section class="card" id="crcl-card">
+                <h2>🩸 კრეატინინის კლირენსი (Cockcroft-Gault)</h2>
+                <div class="formula">[140 − ასაკი] × წონა × (0.85 ქალისთვის) ÷ (72 × Cr, mg/dL)</div>
+                <p class="muted">დოზირების კორექციისთვის ანტიბიოტიკებთან და სხვა მედიკამენტებთან.</p>
+                
+                <div class="row">
+                    <div>
+                        <label for="crcl-age">ასაკი (წელი)</label>
+                        <input id="crcl-age" type="number" min="0" step="1" placeholder="მაგ. 60" />
+                    </div>
+                    <div>
+                        <label for="crcl-weight">წონა (კგ)</label>
+                        <input id="crcl-weight" type="number" min="0" step="0.1" placeholder="მაგ. 70" />
+                    </div>
+                    <div>
+                        <label for="crcl-gender">სქესი</label>
+                        <select id="crcl-gender">
+                            <option value="male">მამრობითი</option>
+                            <option value="female">მდედრობითი</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="crcl-creatinine">სერუმის კრეატინინი</label>
+                        <input id="crcl-creatinine" type="number" min="0.1" step="0.01" placeholder="მაგ. 1.2" />
+                    </div>
+                    <div>
+                        <label for="crcl-unit">ერთეული</label>
+                        <select id="crcl-unit">
+                            <option value="mg/dL">mg/dL</option>
+                            <option value="µmol/L">µmol/L</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btns">
+                    <button class="btn-primary" onclick="calcCrCl()">🧮 გამოთვლა</button>
+                    <button class="btn-ghost" onclick="resetCard('crcl-card')">🔄 გასუფთავება</button>
+                    <button class="btn-ghost" onclick="copyResult('crcl-result')">📋 კოპირება</button>
+                </div>
+                
+                <div id="crcl-result" class="result" aria-live="polite">შედეგი: —</div>
+                
+                <div id="crcl-recommendations" class="recommendations hidden">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        💊 ანტიბიოტიკების დოზირების რეკომენდაციები
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ანტიბიოტიკი</th>
+                                    <th>CrCl (მლ/წთ)</th>
+                                    <th>დოზა</th>
+                                    <th>სიხშირე</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crcl-rec-table-body"></tbody>
+                        </table>
+                    </div>
+                    <p class="muted mt-3 text-xs">
+                        ⚠️ ეს ზოგადი რეკომენდაციებია. ყოველთვის შეამოწმეთ კლინიკური პროტოკოლები.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="foot">
+            <div>
+                <p>© 2025 IMEDCalc • შექმნილია სამედიცინო პერსონალისთვის</p>
+                <p class="mt-1">v2.0.0 • <a href="/api/health" class="text-brand hover:underline" target="_blank">სტატუსი</a></p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Authentication Modals -->
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" role="dialog" aria-labelledby="loginTitle" aria-hidden="true">
+        <div class="modal-content">
+            <button class="modal-close" onclick="hideModal('loginModal')" aria-label="დახურვა">×</button>
+            <div class="modal-header">
+                <h3 id="loginTitle">🔐 შესვლა</h3>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-medium mb-2">იმეილის მისამართი</label>
+                    <input 
+                        type="email" 
+                        id="loginEmail" 
+                        name="email" 
+                        required 
+                        class="w-full"
+                        placeholder="example@domain.com"
+                    >
+                </div>
+                <div>
+                    <label for="loginPassword" class="block text-sm font-medium mb-2">პაროლი</label>
+                    <input 
+                        type="password" 
+                        id="loginPassword" 
+                        name="password" 
+                        required 
+                        class="w-full"
+                        placeholder="მინიმუმ 8 სიმბოლო"
+                    >
+                </div>
+                <button type="submit" class="btn-primary w-full">შესვლა</button>
+            </form>
+            <div class="mt-4 text-center space-y-2">
+                <button onclick="showPasswordReset()" class="text-sm text-brand hover:underline">პაროლის გაგება?</button>
+                <button onclick="showModal('registerModal')" class="text-sm text-muted hover:text-text">არ გაქვთ ანგარიში? რეგისტრაცია</button>
+            </div>
+            <div id="loginError" class="mt-4 p-3 rounded-lg hidden"></div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal" role="dialog" aria-labelledby="registerTitle" aria-hidden="true">
+        <div class="modal-content">
+            <button class="modal-close" onclick="hideModal('registerModal')" aria-label="დახურვა">×</button>
+            <div class="modal-header">
+                <h3 id="registerTitle">📝 რეგისტრაცია</h3>
+            </div>
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label for="registerName" class="block text-sm font-medium mb-2">სრული სახელი</label>
+                    <input 
+                        type="text" 
+                        id="registerName" 
+                        name="name" 
+                        required 
+                        class="w-full"
+                        placeholder="მაგ. გიორგი გუდაბაძე"
+                    >
+                </div>
+                <div>
+                    <label for="registerEmail" class="block text-sm font-medium mb-2">იმეილის მისამართი</label>
+                    <input 
+                        type="email" 
+                        id="registerEmail" 
+                        name="email" 
+                        required 
+                        class="w-full"
+                        placeholder="example@domain.com"
+                    >
+                </div>
+                <div>
+                    <label for="registerPassword" class="block text-sm font-medium mb-2">პაროლი (მინ. 8 სიმბოლო)</label>
+                    <input 
+                        type="password" 
+                        id="registerPassword" 
+                        name="password" 
+                        required 
+                        minlength="8"
+                        class="w-full"
+                        placeholder="ძლიერი პაროლი"
+                    >
+                </div>
+                <button type="submit" class="btn-primary w-full">რეგისტრაცია</button>
+            </form>
+            <div class="mt-4 text-center">
+                <button onclick="showModal('loginModal')" class="text-sm text-muted hover:text-text">უკვე გაქვთ ანგარიში? შესვლა</button>
+            </div>
+            <div id="registerError" class="mt-4 p-3 rounded-lg hidden"></div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal" role="dialog" aria-labelledby="profileTitle" aria-hidden="true">
+        <div class="modal-content">
+            <button class="modal-close" onclick="hideModal('profileModal')" aria-label="დახურვა">×</button>
+            <div class="modal-header">
+                <h3 id="profileTitle">👤 პროფილი</h3>
+            </div>
+            <div id="profileInfo" class="mb-6 p-4 bg-surface rounded-xl text-sm space-y-2"></div>
+            
+            <form id="logoUploadForm" class="space-y-4" enctype="multipart/form-data">
+                <div>
+                    <label for="logoFile" class="block text-sm font-medium mb-2 flex items-center gap-2">
+                        🖼️ ლოგოს შეცვლა
+                        <span class="text-xs text-muted">(SVG, მაქს. 2MB)</span>
+                    </label>
+                    <input 
+                        type="file" 
+                        id="logoFile" 
+                        name="logo" 
+                        accept=".svg" 
+                        class="w-full p-2 border-2 border-dashed border-muted rounded-xl text-sm"
+                    >
+                </div>
+                <button type="submit" class="btn-primary w-full">📤 ლოგოს ატვირთვა</button>
+            </form>
+            
+            <div id="uploadError" class="mt-4 p-3 rounded-lg hidden"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 space-y-2 z-50 hidden"></div>
+
+    <!-- Scripts -->
+    <script src="/js/auth.js"></script>
+    <script src="/js/script.js"></script>
+</body>
+</html>
